@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import type { InterviewEntry, InterviewStage } from '../types'
 import { repo } from '../lib/repository'
+import { useAuth } from '../context/AuthContext'
 import AppHeader from '../components/AppHeader'
 import EntryList from '../components/EntryList'
 import EntryForm, { type EntryDraft } from '../components/EntryForm'
@@ -11,6 +13,8 @@ export default function HomePage() {
   const [stageFilter, setStageFilter] = useState<InterviewStage | 'all'>('all')
   const [formOpen, setFormOpen] = useState(false)
   const [confirmingClear, setConfirmingClear] = useState(false)
+  const { isAuthenticated } = useAuth()
+  const navigate = useNavigate()
 
   const load = async () => {
     setEntries(await repo.list())
@@ -29,11 +33,20 @@ export default function HomePage() {
   })
 
   const openCreate = () => {
+    if (!isAuthenticated) {
+      navigate('/login', { state: { from: { pathname: '/' } } })
+      return
+    }
     setFormOpen(true)
   }
 
   const handleSave = async (draft: EntryDraft) => {
-    await repo.create(draft)
+    const entry: InterviewEntry = {
+      ...draft,
+      id: crypto.randomUUID(),
+      createdAt: new Date().toISOString(),
+    }
+    await repo.upsert(entry)
     await load()
     setFormOpen(false)
   }
@@ -59,7 +72,7 @@ export default function HomePage() {
         <div className="mt-8 flex justify-center">
           {confirmingClear ? (
             <span className="inline-flex items-center gap-2 rounded-xl bg-alert-soft px-4 py-2 text-sm">
-              <span className="text-alert">确认清空全部数据？</span>
+              <span className="text-alert">确认清空我的数据？</span>
               <button
                 onClick={handleClear}
                 className="rounded-lg bg-alert px-3 py-1.5 font-semibold text-white transition hover:brightness-95"
@@ -78,7 +91,7 @@ export default function HomePage() {
               onClick={() => setConfirmingClear(true)}
               className="rounded-xl px-4 py-2.5 text-sm font-medium text-alert transition hover:bg-alert-soft"
             >
-              清空全部数据
+              清空我的数据
             </button>
           )}
         </div>

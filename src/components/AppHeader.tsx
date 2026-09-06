@@ -1,5 +1,6 @@
 import type { InterviewStage } from '../types'
 import { STAGE_LABELS, STAGE_ORDER } from '../types'
+import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 
 interface Props {
@@ -17,7 +18,8 @@ export default function AppHeader({
   onStageFilter,
   onAdd,
 }: Props) {
-  const { isAuthenticated } = useAuth()
+  const { user, isAuthenticated, logout } = useAuth()
+  const navigate = useNavigate()
 
   return (
     <header className="mb-6">
@@ -50,26 +52,38 @@ export default function AppHeader({
         </div>
 
         <div className="flex items-center gap-2">
-          <button
-            type="button"
-            disabled
-            title="登录功能即将上线"
-            className="inline-flex cursor-not-allowed items-center gap-1.5 rounded-xl border border-line bg-white px-4 py-2.5 text-sm font-medium text-muted opacity-70"
-          >
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              className="h-4 w-4"
+          {isAuthenticated ? (
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium text-ink">
+                {user?.username}
+              </span>
+              <button
+                onClick={() => void logout()}
+                className="rounded-xl border border-line bg-white px-3.5 py-2.5 text-sm font-medium text-muted transition hover:bg-slate-100 hover:text-ink"
+              >
+                登出
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={() => navigate('/login')}
+              className="inline-flex items-center gap-1.5 rounded-xl border border-line bg-white px-4 py-2.5 text-sm font-medium text-primary-strong transition hover:bg-primary-faint"
             >
-              <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
-              <path d="M10 17l5-5-5-5" />
-              <path d="M15 12H3" />
-            </svg>
-            {isAuthenticated ? '已登录' : '登录'}
-          </button>
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                className="h-4 w-4"
+              >
+                <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
+                <path d="M10 17l5-5-5-5" />
+                <path d="M15 12H3" />
+              </svg>
+              登录
+            </button>
+          )}
           <button
             onClick={onAdd}
             className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white shadow-[0_8px_20px_-6px_rgba(14,165,233,0.55)] transition hover:bg-primary-strong active:scale-[0.98]"

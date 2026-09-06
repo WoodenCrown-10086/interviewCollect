@@ -36,7 +36,7 @@ export default function EntryDetailPage() {
 
   const handleSave = async (draft: EntryDraft) => {
     if (!entry) return
-    await repo.update(entry.id, draft)
+    await repo.upsert({ ...entry, ...draft })
     await load()
     setEditing(false)
   }

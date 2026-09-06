@@ -27,6 +27,10 @@ pnpm-debug.log*
 # plan documents (不入库)
 docs/reasonix/plans/
 
+# server
+server/data/
+server/dist/
+
 # local env
 *.local
 .env
