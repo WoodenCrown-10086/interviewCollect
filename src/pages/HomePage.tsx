@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import type { InterviewEntry, InterviewStage } from '../types'
 import { repo } from '../lib/repository'
+import { downloadFile } from '../lib/api'
 import { useAuth } from '../context/AuthContext'
 import AppHeader from '../components/AppHeader'
 import EntryList from '../components/EntryList'
@@ -14,7 +15,7 @@ export default function HomePage() {
   const [stageFilter, setStageFilter] = useState<InterviewStage | 'all'>('all')
   const [formOpen, setFormOpen] = useState(false)
   const [confirmingClear, setConfirmingClear] = useState(false)
-  const [toast, setToast] = useState<string | null>(null)
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
   const { isAuthenticated } = useAuth()
   const navigate = useNavigate()
 
@@ -51,13 +52,24 @@ export default function HomePage() {
     await repo.upsert(entry)
     await load()
     setFormOpen(false)
-    setToast('创建成功')
+    setToast({ message: '创建成功', type: 'success' })
   }
 
   const handleClear = async () => {
     await repo.clear()
     await load()
     setConfirmingClear(false)
+  }
+
+  const handleExport = async () => {
+    try {
+      await downloadFile('/api/entries/export', 'interview-entries.xlsx')
+    } catch (err) {
+      setToast({
+        message: err instanceof Error ? err.message : '导出失败',
+        type: 'error',
+      })
+    }
   }
 
   return (
@@ -68,6 +80,7 @@ export default function HomePage() {
         stageFilter={stageFilter}
         onStageFilter={setStageFilter}
         onAdd={openCreate}
+        onExport={handleExport}
       />
       <EntryList entries={filtered} />
 
@@ -108,7 +121,13 @@ export default function HomePage() {
         />
       ) : null}
 
-      {toast ? <Toast message={toast} onDone={() => setToast(null)} /> : null}
+      {toast ? (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onDone={() => setToast(null)}
+        />
+      ) : null}
     </div>
   )
 }

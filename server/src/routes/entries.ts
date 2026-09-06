@@ -1,7 +1,8 @@
 import { Router } from 'express'
+import ExcelJS from 'exceljs'
 import { db } from '../db.js'
-import { requireAuth, optionalAuth } from '../middleware.js'
-import { validateEntry } from '../validate.js'
+import { requireAuth, optionalAuth, asyncHandler } from '../middleware.js'
+import { validateEntry, STAGE_LABELS, type Stage } from '../validate.js'
 
 const router = Router()
 
@@ -53,6 +54,66 @@ router.get('/', optionalAuth, (req, res) => {
   }
   res.json(rows.map(toEntry))
 })
+
+// 导出 Excel（需登录，导出自己的数据）
+router.get(
+  '/export',
+  requireAuth,
+  asyncHandler(async (req, res) => {
+    const rows = db
+      .prepare(
+        `SELECT company, stage, note, updated_at, website, markdown
+         FROM interview_entries WHERE owner_id = ? ORDER BY updated_at DESC`,
+      )
+      .all(req.userId) as EntryRow[]
+
+    const workbook = new ExcelJS.Workbook()
+    workbook.creator = 'Interview Collect'
+    workbook.created = new Date()
+    const sheet = workbook.addWorksheet('面试进度')
+
+    sheet.columns = [
+      { header: '公司', key: 'company', width: 20 },
+      { header: '状态', key: 'stage', width: 12 },
+      { header: '备注', key: 'note', width: 32 },
+      { header: '更新日期', key: 'updatedAt', width: 14 },
+      { header: '官网链接', key: 'website', width: 36 },
+      { header: '面筋', key: 'markdown', width: 60 },
+    ]
+
+    const header = sheet.getRow(1)
+    header.font = { bold: true, color: { argb: 'FF0284C7' } }
+    header.fill = {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: 'FFE0F2FE' },
+    }
+
+    for (const r of rows) {
+      sheet.addRow({
+        company: r.company,
+        stage: STAGE_LABELS[r.stage as Stage] ?? r.stage,
+        note: r.note ?? '',
+        updatedAt: r.updated_at,
+        website: r.website ?? '',
+        markdown: r.markdown,
+      })
+    }
+
+    res.setHeader(
+      'Content-Type',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    )
+    res.setHeader(
+      'Content-Disposition',
+      `attachment; filename="interview-entries-${new Date()
+        .toISOString()
+        .slice(0, 10)}.xlsx"`,
+    )
+    await workbook.xlsx.write(res)
+    res.end()
+  }),
+)
 
 // 详情：需登录（防分享链接直达）；私有数据仅 owner 可读
 router.get('/:id', requireAuth, (req, res) => {

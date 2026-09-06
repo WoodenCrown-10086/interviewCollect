@@ -64,3 +64,39 @@ export async function request<T = unknown>(
   if (res.status === 204) return undefined as T
   return (await res.json()) as T
 }
+
+export async function downloadFile(
+  path: string,
+  filename: string,
+): Promise<void> {
+  const headers = new Headers()
+  if (accessToken) headers.set('Authorization', `Bearer ${accessToken}`)
+
+  let res = await fetch(path, { headers, credentials: 'include' })
+
+  if (res.status === 401) {
+    const ok = await tryRefresh()
+    if (ok) return downloadFile(path, filename)
+  }
+
+  if (!res.ok) {
+    let message = '下载失败'
+    try {
+      const data = (await res.json()) as { error?: unknown }
+      if (data && typeof data.error === 'string') message = data.error
+    } catch {
+      /* ignore */
+    }
+    throw new ApiError(res.status, message)
+  }
+
+  const blob = await res.blob()
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = filename
+  document.body.appendChild(a)
+  a.click()
+  a.remove()
+  URL.revokeObjectURL(url)
+}

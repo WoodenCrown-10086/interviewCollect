@@ -9,6 +9,7 @@ interface Props {
   stageFilter: InterviewStage | 'all'
   onStageFilter: (v: InterviewStage | 'all') => void
   onAdd: () => void
+  onExport?: () => void
 }
 
 export default function AppHeader({
@@ -17,6 +18,7 @@ export default function AppHeader({
   stageFilter,
   onStageFilter,
   onAdd,
+  onExport,
 }: Props) {
   const { user, isAuthenticated, logout } = useAuth()
   const navigate = useNavigate()
@@ -57,6 +59,27 @@ export default function AppHeader({
               <span className="text-sm font-medium text-ink">
                 {user?.username}
               </span>
+              {onExport ? (
+                <button
+                  onClick={onExport}
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-line bg-white px-3.5 py-2.5 text-sm font-medium text-muted transition hover:bg-slate-100 hover:text-ink"
+                >
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="h-4 w-4"
+                  >
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                    <path d="M7 10l5 5 5-5" />
+                    <path d="M12 15V3" />
+                  </svg>
+                  导出
+                </button>
+              ) : null}
               <button
                 onClick={() => void logout()}
                 className="rounded-xl border border-line bg-white px-3.5 py-2.5 text-sm font-medium text-muted transition hover:bg-slate-100 hover:text-ink"

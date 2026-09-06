@@ -12,6 +12,18 @@ export const STAGES = [
 
 export type Stage = (typeof STAGES)[number]
 
+export const STAGE_LABELS: Record<Stage, string> = {
+  not_applied: '未投递',
+  applied: '已投递',
+  scheduled: '已约面',
+  round1: '一面过',
+  round2: '二面过',
+  round3: '三面过',
+  hr: 'HR面过',
+  offer: 'Offer',
+  reject: '已挂',
+}
+
 export function validateUsername(u: unknown): string | null {
   if (typeof u !== 'string') return '用户名格式不正确'
   if (!/^[a-zA-Z0-9_]{3,30}$/.test(u)) {
