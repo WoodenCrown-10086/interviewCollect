@@ -42,7 +42,7 @@ export const REFRESH_COOKIE = 'refresh'
 export function refreshCookieOptions() {
   return {
     httpOnly: true,
-    secure: config.isProduction,
+    secure: config.cookieSecure,
     sameSite: 'lax' as const,
     path: '/api/auth',
     maxAge: 7 * 24 * 60 * 60 * 1000, // 7 天

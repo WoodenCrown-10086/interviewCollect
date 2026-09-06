@@ -1,0 +1,13 @@
+services:
+  interview-collect:
+    build: .
+    container_name: interview-collect
+    restart: unless-stopped
+    ports:
+      - "80:3001"
+    environment:
+      - NODE_ENV=production
+      - JWT_SECRET=${JWT_SECRET}
+      - COOKIE_SECURE=false
+    volumes:
+      - ./data:/app/server/data
