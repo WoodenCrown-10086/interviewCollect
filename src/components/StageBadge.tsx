@@ -10,6 +10,7 @@ const STAGE_STYLES: Record<InterviewStage, string> = {
   round3: 'bg-primary text-white ring-primary',
   hr: 'bg-primary-strong text-white ring-primary-strong',
   offer: 'bg-accent text-yellow-900 ring-accent',
+  reject: 'bg-alert-soft text-alert ring-alert-soft',
 }
 
 export default function StageBadge({ stage }: { stage: InterviewStage }) {

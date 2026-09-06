@@ -7,6 +7,7 @@ export type InterviewStage =
   | 'round3' // 三面过
   | 'hr' // HR面过
   | 'offer' // Offer
+  | 'reject' // 已挂
 
 export interface InterviewEntry {
   id: string
@@ -29,6 +30,7 @@ export const STAGE_ORDER: InterviewStage[] = [
   'round3',
   'hr',
   'offer',
+  'reject',
 ]
 
 export const STAGE_LABELS: Record<InterviewStage, string> = {
@@ -40,4 +42,5 @@ export const STAGE_LABELS: Record<InterviewStage, string> = {
   round3: '三面过',
   hr: 'HR面过',
   offer: 'Offer',
+  reject: '已挂',
 }

@@ -14,7 +14,7 @@ export default function EntryList({
   }
 
   return (
-    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+    <div className="grid grid-cols-1 items-start gap-4 md:grid-cols-2">
       {entries.map((entry, i) => (
         <EntryCard key={entry.id} entry={entry} index={i} />
       ))}
