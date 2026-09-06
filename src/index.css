@@ -210,3 +210,49 @@ body {
 .md-body input[type="checkbox"] {
   margin-right: 0.4em;
 }
+
+/* ---------- react-day-picker 主题化（天蓝） ---------- */
+.rdp-root {
+  --rdp-accent-color: var(--color-primary-strong);
+  --rdp-accent-background-color: var(--color-primary-soft);
+  --rdp-today-color: var(--color-primary);
+  --rdp-day-width: 2.25rem;
+  --rdp-day-height: 2.25rem;
+  --rdp-day_button-width: 2.25rem;
+  --rdp-day_button-height: 2.25rem;
+  --rdp-day_button-border-radius: 0.5rem;
+  --rdp-selected-border: none;
+  --rdp-outside-opacity: 0.4;
+}
+
+.rdp-day_button {
+  transition: background-color 150ms ease, color 150ms ease;
+}
+
+.rdp-day:hover .rdp-day_button:not(:disabled) {
+  background: var(--color-primary-faint);
+}
+
+.rdp-day.rdp-selected {
+  font-size: inherit;
+  font-weight: 600;
+}
+
+.rdp-day.rdp-selected .rdp-day_button {
+  background: var(--color-primary);
+  color: #fff;
+}
+
+.rdp-day.rdp-selected:hover .rdp-day_button {
+  background: var(--color-primary-strong);
+}
+
+.rdp-day.rdp-today:not(.rdp-selected) .rdp-day_button {
+  color: var(--color-primary-strong);
+  font-weight: 600;
+}
+
+.rdp-caption_label {
+  color: var(--color-ink);
+  font-weight: 600;
+}

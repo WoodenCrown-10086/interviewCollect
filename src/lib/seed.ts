@@ -6,7 +6,8 @@ const SEED_FLAG_KEY = 'interviewCollect.seeded.v1'
 function daysAgo(n: number): string {
   const d = new Date()
   d.setDate(d.getDate() - n)
-  return d.toISOString()
+  const pad = (x: number) => String(x).padStart(2, '0')
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
 }
 
 export async function seedIfNeeded(): Promise<void> {

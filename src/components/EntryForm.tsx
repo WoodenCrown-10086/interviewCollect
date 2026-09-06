@@ -2,6 +2,8 @@ import { useState } from 'react'
 import type { FormEvent } from 'react'
 import type { InterviewEntry, InterviewStage } from '../types'
 import { STAGE_LABELS, STAGE_ORDER } from '../types'
+import { todayStr, toDateInputValue } from '../lib/format'
+import DatePicker from './DatePicker'
 
 export type EntryDraft = Omit<InterviewEntry, 'id' | 'createdAt'>
 
@@ -20,6 +22,7 @@ export default function EntryForm({ entry, onClose, onSave }: Props) {
   const [note, setNote] = useState(entry?.note ?? '')
   const [website, setWebsite] = useState(entry?.website ?? '')
   const [markdown, setMarkdown] = useState(entry?.markdown ?? '')
+  const [date, setDate] = useState(() => toDateInputValue(entry?.updatedAt))
   const [saving, setSaving] = useState(false)
 
   const handleSubmit = async (e: FormEvent) => {
@@ -34,7 +37,7 @@ export default function EntryForm({ entry, onClose, onSave }: Props) {
         note: note.trim() || undefined,
         website: website.trim() || undefined,
         markdown,
-        updatedAt: new Date().toISOString(),
+        updatedAt: date || todayStr(),
       })
     } finally {
       setSaving(false)
@@ -104,6 +107,13 @@ export default function EntryForm({ entry, onClose, onSave }: Props) {
                 </option>
               ))}
             </select>
+          </div>
+
+          <div>
+            <label className="mb-1.5 block text-[13px] font-medium text-ink">
+              日期
+            </label>
+            <DatePicker value={date} onChange={setDate} />
           </div>
 
           <div>

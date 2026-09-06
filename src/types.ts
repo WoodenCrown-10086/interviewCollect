@@ -14,7 +14,7 @@ export interface InterviewEntry {
   company: string
   stage: InterviewStage
   note?: string
-  updatedAt: string // ISO 8601
+  updatedAt: string // YYYY-MM-DD
   website?: string
   markdown: string
   createdAt: string
