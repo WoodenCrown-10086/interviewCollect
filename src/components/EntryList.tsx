@@ -4,13 +4,11 @@ import EmptyState from './EmptyState'
 
 export default function EntryList({
   entries,
-  onAdd,
 }: {
   entries: InterviewEntry[]
-  onAdd: () => void
 }) {
   if (entries.length === 0) {
-    return <EmptyState onAdd={onAdd} />
+    return <EmptyState />
   }
 
   return (

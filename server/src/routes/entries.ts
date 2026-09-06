@@ -31,14 +31,14 @@ function toEntry(row: EntryRow) {
   }
 }
 
-// 列表：未登录只返回公共案例；登录返回公共案例 + 自己的
+// 列表：未登录只返回公共案例；登录只返回自己的
 router.get('/', optionalAuth, (req, res) => {
   let rows: EntryRow[]
   if (req.userId != null) {
     rows = db
       .prepare(
         `SELECT * FROM interview_entries
-         WHERE owner_id IS NULL OR owner_id = ?
+         WHERE owner_id = ?
          ORDER BY updated_at DESC, created_at DESC`,
       )
       .all(req.userId) as EntryRow[]

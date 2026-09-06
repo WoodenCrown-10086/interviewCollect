@@ -60,10 +60,12 @@ export function validateEntry(
   }
 
   const markdown = b.markdown
-  if (typeof markdown !== 'string' || markdown.length === 0) {
-    return { ok: false, error: '面筋内容不能为空' }
+  if (markdown != null && typeof markdown !== 'string') {
+    return { ok: false, error: '面筋格式不正确' }
   }
-  if (markdown.length > 200000) return { ok: false, error: '面筋内容过长' }
+  if (typeof markdown === 'string' && markdown.length > 200000) {
+    return { ok: false, error: '面筋内容过长' }
+  }
 
   const note = b.note
   if (note != null && (typeof note !== 'string' || note.length > 500)) {
@@ -87,7 +89,7 @@ export function validateEntry(
       note: typeof note === 'string' && note ? note : undefined,
       updatedAt,
       website: typeof website === 'string' && website ? website : undefined,
-      markdown,
+      markdown: typeof markdown === 'string' ? markdown : '',
     },
   }
 }

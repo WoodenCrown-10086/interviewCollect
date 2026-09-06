@@ -82,6 +82,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } finally {
       setAccessToken(null)
       setUser(null)
+      // 强制刷新页面，清除内存中的旧数据（列表等），回到未登录态首页
+      window.location.href = '/'
     }
   }
 

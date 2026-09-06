@@ -6,6 +6,7 @@ import { useAuth } from '../context/AuthContext'
 import AppHeader from '../components/AppHeader'
 import EntryList from '../components/EntryList'
 import EntryForm, { type EntryDraft } from '../components/EntryForm'
+import Toast from '../components/Toast'
 
 export default function HomePage() {
   const [entries, setEntries] = useState<InterviewEntry[]>([])
@@ -13,6 +14,7 @@ export default function HomePage() {
   const [stageFilter, setStageFilter] = useState<InterviewStage | 'all'>('all')
   const [formOpen, setFormOpen] = useState(false)
   const [confirmingClear, setConfirmingClear] = useState(false)
+  const [toast, setToast] = useState<string | null>(null)
   const { isAuthenticated } = useAuth()
   const navigate = useNavigate()
 
@@ -49,6 +51,7 @@ export default function HomePage() {
     await repo.upsert(entry)
     await load()
     setFormOpen(false)
+    setToast('创建成功')
   }
 
   const handleClear = async () => {
@@ -66,7 +69,7 @@ export default function HomePage() {
         onStageFilter={setStageFilter}
         onAdd={openCreate}
       />
-      <EntryList entries={filtered} onAdd={openCreate} />
+      <EntryList entries={filtered} />
 
       {entries.length > 0 ? (
         <div className="mt-8 flex justify-center">
@@ -104,6 +107,8 @@ export default function HomePage() {
           onSave={handleSave}
         />
       ) : null}
+
+      {toast ? <Toast message={toast} onDone={() => setToast(null)} /> : null}
     </div>
   )
 }
