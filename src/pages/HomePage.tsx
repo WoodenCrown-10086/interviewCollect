@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import type { InterviewEntry, InterviewStage } from '../types'
 import { repo } from '../lib/repository'
 import { downloadFile } from '../lib/api'
+import { generateId } from '../lib/id'
 import { useAuth } from '../context/AuthContext'
 import AppHeader from '../components/AppHeader'
 import EntryList from '../components/EntryList'
@@ -49,7 +50,7 @@ export default function HomePage() {
   const handleSave = async (draft: EntryDraft) => {
     const entry: InterviewEntry = {
       ...draft,
-      id: crypto.randomUUID(),
+      id: generateId(),
       createdAt: new Date().toISOString(),
     }
     await repo.upsert(entry)
