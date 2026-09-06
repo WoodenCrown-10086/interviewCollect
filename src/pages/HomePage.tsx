@@ -16,7 +16,7 @@ export default function HomePage() {
   const [formOpen, setFormOpen] = useState(false)
   const [confirmingClear, setConfirmingClear] = useState(false)
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
-  const { isAuthenticated } = useAuth()
+  const { isAuthenticated, loading } = useAuth()
   const navigate = useNavigate()
 
   const load = async () => {
@@ -24,8 +24,11 @@ export default function HomePage() {
   }
 
   useEffect(() => {
+    // 等待登录态恢复完成（refresh 拿到 access token）后再拉列表，
+    // 避免刷新时以「未登录」身份拉到公共案例的竞态
+    if (loading) return
     void load()
-  }, [])
+  }, [loading])
 
   const filtered = entries.filter((e) => {
     const matchSearch = e.company
