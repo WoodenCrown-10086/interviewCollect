@@ -1,3 +1,4 @@
+# 当前使用（IP + HTTP，域名未备案时）
 services:
   interview-collect:
     build: .

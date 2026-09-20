@@ -1,0 +1,7 @@
+huxiao.cloud {
+    reverse_proxy interview-collect:3001
+}
+
+www.huxiao.cloud {
+    redir https://huxiao.cloud{uri} permanent
+}

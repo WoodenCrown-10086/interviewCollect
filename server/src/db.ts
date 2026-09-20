@@ -19,19 +19,54 @@ db.exec(`
   );
 
   CREATE TABLE IF NOT EXISTS interview_entries (
-    id         TEXT PRIMARY KEY,
-    owner_id   INTEGER REFERENCES users(id) ON DELETE CASCADE,
-    company    TEXT NOT NULL,
-    stage      TEXT NOT NULL,
-    note       TEXT,
-    updated_at TEXT NOT NULL,
-    website    TEXT,
-    markdown   TEXT NOT NULL,
-    created_at TEXT NOT NULL
+    id               TEXT PRIMARY KEY,
+    owner_id         INTEGER REFERENCES users(id) ON DELETE CASCADE,
+    company          TEXT NOT NULL,
+    stage            TEXT NOT NULL,
+    sub_status       TEXT,
+    appointment_date TEXT,
+    note             TEXT,
+    updated_at       TEXT NOT NULL,
+    website          TEXT,
+    markdown         TEXT NOT NULL,
+    created_at       TEXT NOT NULL
   );
 
   CREATE INDEX IF NOT EXISTS idx_entries_owner ON interview_entries(owner_id);
 `)
+
+// 旧库补列（幂等）
+function ensureColumn(column: string, type: string): void {
+  const cols = db
+    .prepare('PRAGMA table_info(interview_entries)')
+    .all() as Array<{ name: string }>
+  if (!cols.some((c) => c.name === column)) {
+    db.exec(`ALTER TABLE interview_entries ADD COLUMN ${column} ${type}`)
+  }
+}
+ensureColumn('sub_status', 'TEXT')
+ensureColumn('appointment_date', 'TEXT')
+
+// 旧状态值 → 新状态 + 子状态（幂等：迁移后旧值不再存在）
+function migrateLegacyStages(): void {
+  const map: Array<[string[], string, string | null]> = [
+    [['not_applied'], 'applied', null],
+    [['scheduled'], 'tech_interview', 'scheduled'],
+    [['round1', 'round2', 'round3'], 'tech_interview', 'completed_next'],
+    [['hr'], 'hr_interview', 'completed_all'],
+    [['reject'], 'terminated', null],
+  ]
+  const upd = db.prepare(
+    'UPDATE interview_entries SET stage = ?, sub_status = ? WHERE stage = ?',
+  )
+  const tx = db.transaction(() => {
+    for (const [froms, to, sub] of map) {
+      for (const old of froms) upd.run(to, sub, old)
+    }
+  })
+  tx()
+}
+migrateLegacyStages()
 
 // 公共案例数据（owner_id = NULL），未登录也可查看；仅首次（空库）时插入
 const PUBLIC_SEED = [
@@ -39,6 +74,8 @@ const PUBLIC_SEED = [
     id: 'demo-bytedance',
     company: '字节跳动',
     stage: 'offer',
+    subStatus: null as string | null,
+    appointmentDate: null as string | null,
     note: '等 HR 谈薪，base 杭州',
     updatedAt: '2026-09-05',
     website: 'https://www.bytedance.com',
@@ -48,8 +85,10 @@ const PUBLIC_SEED = [
   {
     id: 'demo-tencent',
     company: '腾讯',
-    stage: 'round2',
-    note: '等二面结果，预计本周内出',
+    stage: 'tech_interview',
+    subStatus: 'completed_next',
+    appointmentDate: null,
+    note: '技术二面刚过，等下一轮',
     updatedAt: '2026-09-03',
     website: 'https://www.tencent.com',
     markdown:
@@ -59,6 +98,8 @@ const PUBLIC_SEED = [
     id: 'demo-alibaba',
     company: '阿里巴巴',
     stage: 'applied',
+    subStatus: null,
+    appointmentDate: null,
     note: '刚投递，等初筛',
     updatedAt: '2026-08-28',
     website: 'https://www.alibabagroup.com',
@@ -75,8 +116,8 @@ export function seedPublicEntries(): void {
 
   const insert = db.prepare(`
     INSERT INTO interview_entries
-      (id, owner_id, company, stage, note, updated_at, website, markdown, created_at)
-    VALUES (?, NULL, ?, ?, ?, ?, ?, ?, ?)
+      (id, owner_id, company, stage, sub_status, appointment_date, note, updated_at, website, markdown, created_at)
+    VALUES (?, NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `)
   const now = new Date().toISOString()
   const tx = db.transaction(() => {
@@ -85,6 +126,8 @@ export function seedPublicEntries(): void {
         e.id,
         e.company,
         e.stage,
+        e.subStatus,
+        e.appointmentDate,
         e.note ?? null,
         e.updatedAt,
         e.website ?? null,

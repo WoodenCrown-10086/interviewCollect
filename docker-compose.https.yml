@@ -1,0 +1,27 @@
+# 域名 huxiao.cloud 备案通过后使用（HTTPS，Caddy 自动证书）
+# 用法：docker compose -f docker-compose.https.yml up -d --build
+services:
+  interview-collect:
+    build: .
+    container_name: interview-collect
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - JWT_SECRET=${JWT_SECRET}
+      - COOKIE_SECURE=true
+    volumes:
+      - ./data:/app/server/data
+
+  caddy:
+    image: caddy:2
+    container_name: caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - ./caddy_data:/data
+      - ./caddy_config:/config
+    depends_on:
+      - interview-collect

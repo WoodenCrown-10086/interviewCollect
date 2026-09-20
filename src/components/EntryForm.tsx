@@ -1,7 +1,17 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
-import type { InterviewEntry, InterviewStage } from '../types'
-import { STAGE_LABELS, STAGE_ORDER } from '../types'
+import type {
+  InterviewEntry,
+  InterviewStage,
+  InterviewSubStatus,
+} from '../types'
+import {
+  ALLOWED_SUBSTATUS,
+  STAGE_LABELS,
+  STAGE_ORDER,
+  SUBSTATUS_LABELS,
+  stageHasSubStatus,
+} from '../types'
 import { todayStr, toDateInputValue } from '../lib/format'
 import DatePicker from './DatePicker'
 
@@ -16,24 +26,52 @@ interface Props {
 const inputCls =
   'w-full rounded-xl border border-line bg-white px-3 py-2.5 text-sm text-ink outline-none transition placeholder:text-muted/70 focus:border-primary focus:ring-2 focus:ring-primary/20'
 
+const labelCls = 'mb-1.5 block text-[13px] font-medium text-ink'
+
 export default function EntryForm({ entry, onClose, onSave }: Props) {
   const [company, setCompany] = useState(entry?.company ?? '')
   const [stage, setStage] = useState<InterviewStage>(entry?.stage ?? 'applied')
+  const [subStatus, setSubStatus] = useState<InterviewSubStatus | ''>(
+    entry?.subStatus ?? '',
+  )
+  const [appointmentDate, setAppointmentDate] = useState(
+    entry?.appointmentDate ?? '',
+  )
   const [note, setNote] = useState(entry?.note ?? '')
   const [website, setWebsite] = useState(entry?.website ?? '')
   const [markdown, setMarkdown] = useState(entry?.markdown ?? '')
   const [date, setDate] = useState(() => toDateInputValue(entry?.updatedAt))
   const [saving, setSaving] = useState(false)
 
+  const needSub = stageHasSubStatus(stage)
+  const allowedSub = ALLOWED_SUBSTATUS[stage]
+
+  // 主状态变化时，修正子状态为合法值
+  useEffect(() => {
+    if (!needSub) {
+      setSubStatus('')
+      return
+    }
+    setSubStatus((prev) =>
+      prev && allowedSub.includes(prev) ? prev : allowedSub[0],
+    )
+  }, [stage, needSub, allowedSub])
+
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
     const c = company.trim()
     if (!c) return
+    if (needSub && !subStatus) return
     setSaving(true)
     try {
       await onSave({
         company: c,
         stage,
+        subStatus: needSub ? (subStatus as InterviewSubStatus) : undefined,
+        appointmentDate:
+          subStatus === 'scheduled' && appointmentDate
+            ? appointmentDate
+            : undefined,
         note: note.trim() || undefined,
         website: website.trim() || undefined,
         markdown,
@@ -80,7 +118,7 @@ export default function EntryForm({ entry, onClose, onSave }: Props) {
 
         <div className="flex-1 space-y-4 overflow-y-auto px-5 py-4">
           <div>
-            <label className="mb-1.5 block text-[13px] font-medium text-ink">
+            <label className={labelCls}>
               公司 <span className="text-alert">*</span>
             </label>
             <input
@@ -92,34 +130,62 @@ export default function EntryForm({ entry, onClose, onSave }: Props) {
             />
           </div>
 
-          <div>
-            <label className="mb-1.5 block text-[13px] font-medium text-ink">
-              面试进度
-            </label>
-            <select
-              value={stage}
-              onChange={(e) => setStage(e.target.value as InterviewStage)}
-              className={inputCls}
-            >
-              {STAGE_ORDER.map((s) => (
-                <option key={s} value={s}>
-                  {STAGE_LABELS[s]}
-                </option>
-              ))}
-            </select>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className={labelCls}>
+                主状态 <span className="text-alert">*</span>
+              </label>
+              <select
+                value={stage}
+                onChange={(e) => setStage(e.target.value as InterviewStage)}
+                className={inputCls}
+              >
+                {STAGE_ORDER.map((s) => (
+                  <option key={s} value={s}>
+                    {STAGE_LABELS[s]}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {needSub ? (
+              <div>
+                <label className={labelCls}>
+                  子状态 <span className="text-alert">*</span>
+                </label>
+                <select
+                  value={subStatus}
+                  onChange={(e) =>
+                    setSubStatus(e.target.value as InterviewSubStatus)
+                  }
+                  className={inputCls}
+                >
+                  {allowedSub.map((s) => (
+                    <option key={s} value={s}>
+                      {SUBSTATUS_LABELS[s]}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            ) : (
+              <div />
+            )}
           </div>
 
+          {subStatus === 'scheduled' ? (
+            <div>
+              <label className={labelCls}>预约日期</label>
+              <DatePicker value={appointmentDate} onChange={setAppointmentDate} />
+            </div>
+          ) : null}
+
           <div>
-            <label className="mb-1.5 block text-[13px] font-medium text-ink">
-              日期
-            </label>
+            <label className={labelCls}>日期</label>
             <DatePicker value={date} onChange={setDate} />
           </div>
 
           <div>
-            <label className="mb-1.5 block text-[13px] font-medium text-ink">
-              备注
-            </label>
+            <label className={labelCls}>备注</label>
             <input
               value={note}
               onChange={(e) => setNote(e.target.value)}
@@ -129,9 +195,7 @@ export default function EntryForm({ entry, onClose, onSave }: Props) {
           </div>
 
           <div>
-            <label className="mb-1.5 block text-[13px] font-medium text-ink">
-              官网链接
-            </label>
+            <label className={labelCls}>官网链接</label>
             <input
               value={website}
               onChange={(e) => setWebsite(e.target.value)}
@@ -142,9 +206,7 @@ export default function EntryForm({ entry, onClose, onSave }: Props) {
           </div>
 
           <div>
-            <label className="mb-1.5 block text-[13px] font-medium text-ink">
-              面筋（Markdown）
-            </label>
+            <label className={labelCls}>面筋（Markdown）</label>
             <textarea
               value={markdown}
               onChange={(e) => setMarkdown(e.target.value)}

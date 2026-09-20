@@ -31,6 +31,10 @@ docs/reasonix/plans/
 server/data/
 server/dist/
 
+# caddy（证书与配置持久化，不入库）
+caddy_data/
+caddy_config/
+
 # local env
 *.local
 .env

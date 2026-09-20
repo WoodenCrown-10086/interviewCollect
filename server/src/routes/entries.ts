@@ -2,7 +2,7 @@ import { Router } from 'express'
 import ExcelJS from 'exceljs'
 import { db } from '../db.js'
 import { requireAuth, optionalAuth, asyncHandler } from '../middleware.js'
-import { validateEntry, STAGE_LABELS, type Stage } from '../validate.js'
+import { validateEntry, STAGE_LABELS, SUBSTATUS_LABELS, type Stage } from '../validate.js'
 
 const router = Router()
 
@@ -11,6 +11,8 @@ interface EntryRow {
   owner_id: number | null
   company: string
   stage: string
+  sub_status: string | null
+  appointment_date: string | null
   note: string | null
   updated_at: string
   website: string | null
@@ -23,6 +25,8 @@ function toEntry(row: EntryRow) {
     id: row.id,
     company: row.company,
     stage: row.stage,
+    subStatus: row.sub_status ?? undefined,
+    appointmentDate: row.appointment_date ?? undefined,
     note: row.note ?? undefined,
     updatedAt: row.updated_at,
     website: row.website ?? undefined,
@@ -62,7 +66,7 @@ router.get(
   asyncHandler(async (req, res) => {
     const rows = db
       .prepare(
-        `SELECT company, stage, note, updated_at, website, markdown
+        `SELECT company, stage, sub_status, appointment_date, note, updated_at, website, markdown
          FROM interview_entries WHERE owner_id = ? ORDER BY updated_at DESC`,
       )
       .all(req.userId) as EntryRow[]
@@ -74,7 +78,9 @@ router.get(
 
     sheet.columns = [
       { header: '公司', key: 'company', width: 20 },
-      { header: '状态', key: 'stage', width: 12 },
+      { header: '主状态', key: 'stage', width: 12 },
+      { header: '子状态', key: 'subStatus', width: 16 },
+      { header: '预约日期', key: 'appointmentDate', width: 14 },
       { header: '备注', key: 'note', width: 32 },
       { header: '更新日期', key: 'updatedAt', width: 14 },
       { header: '官网链接', key: 'website', width: 36 },
@@ -93,6 +99,8 @@ router.get(
       sheet.addRow({
         company: r.company,
         stage: STAGE_LABELS[r.stage as Stage] ?? r.stage,
+        subStatus: r.sub_status ? SUBSTATUS_LABELS[r.sub_status] ?? r.sub_status : '',
+        appointmentDate: r.appointment_date ?? '',
         note: r.note ?? '',
         updatedAt: r.updated_at,
         website: r.website ?? '',
@@ -156,11 +164,13 @@ router.put('/:id', requireAuth, (req, res) => {
   if (existing) {
     db.prepare(
       `UPDATE interview_entries
-       SET company = ?, stage = ?, note = ?, updated_at = ?, website = ?, markdown = ?
+       SET company = ?, stage = ?, sub_status = ?, appointment_date = ?, note = ?, updated_at = ?, website = ?, markdown = ?
        WHERE id = ?`,
     ).run(
       data.company,
       data.stage,
+      data.subStatus ?? null,
+      data.appointmentDate ?? null,
       data.note ?? null,
       data.updatedAt,
       data.website ?? null,
@@ -171,13 +181,15 @@ router.put('/:id', requireAuth, (req, res) => {
     const now = new Date().toISOString()
     db.prepare(
       `INSERT INTO interview_entries
-        (id, owner_id, company, stage, note, updated_at, website, markdown, created_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        (id, owner_id, company, stage, sub_status, appointment_date, note, updated_at, website, markdown, created_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     ).run(
       id,
       req.userId,
       data.company,
       data.stage,
+      data.subStatus ?? null,
+      data.appointmentDate ?? null,
       data.note ?? null,
       data.updatedAt,
       data.website ?? null,

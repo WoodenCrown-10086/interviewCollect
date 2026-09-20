@@ -7,6 +7,7 @@ import { generateId } from '../lib/id'
 import { useAuth } from '../context/AuthContext'
 import AppHeader from '../components/AppHeader'
 import EntryList from '../components/EntryList'
+import Dashboard from '../components/Dashboard'
 import EntryForm, { type EntryDraft } from '../components/EntryForm'
 import Toast from '../components/Toast'
 
@@ -86,6 +87,7 @@ export default function HomePage() {
         onAdd={openCreate}
         onExport={handleExport}
       />
+      <Dashboard entries={entries} />
       <EntryList entries={filtered} />
 
       {entries.length > 0 ? (

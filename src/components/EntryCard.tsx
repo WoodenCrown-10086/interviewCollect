@@ -3,6 +3,7 @@ import type { CSSProperties } from 'react'
 import { Link } from 'react-router-dom'
 import type { InterviewEntry } from '../types'
 import StageBadge from './StageBadge'
+import SubStatusBadge from './SubStatusBadge'
 import MarkdownView from './MarkdownView'
 import { formatDate } from '../lib/format'
 
@@ -138,6 +139,20 @@ export default function EntryCard({
         <div className="entry-expand-inner">
           <div className="border-t border-line/60">
             <div className="h-[min(45vh,340px)] overflow-y-auto px-4 py-4 sm:px-5">
+              {entry.subStatus ? (
+                <div className="mb-3 flex flex-wrap items-center gap-2 text-[13px]">
+                  <span className="text-muted">面试进度：</span>
+                  <SubStatusBadge subStatus={entry.subStatus} />
+                </div>
+              ) : null}
+              {entry.subStatus === 'scheduled' && entry.appointmentDate ? (
+                <div className="mb-3 rounded-lg bg-accent-soft px-3 py-2 text-[13px]">
+                  <span className="font-medium text-yellow-800">
+                    预约日期：
+                  </span>
+                  <span className="text-ink">{entry.appointmentDate}</span>
+                </div>
+              ) : null}
               {entry.note ? (
                 <div className="mb-3 rounded-lg bg-primary-faint px-3 py-2 text-[13px]">
                   <span className="font-medium text-primary-strong">

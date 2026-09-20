@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import type { InterviewEntry } from '../types'
 import { repo } from '../lib/repository'
 import StageBadge from '../components/StageBadge'
+import SubStatusBadge from '../components/SubStatusBadge'
 import MarkdownView from '../components/MarkdownView'
 import EntryForm, { type EntryDraft } from '../components/EntryForm'
 import { formatDate } from '../lib/format'
@@ -90,6 +91,9 @@ export default function EntryDetailPage() {
               </h1>
               <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-[13px] text-muted">
                 <StageBadge stage={entry.stage} />
+                {entry.subStatus ? (
+                  <SubStatusBadge subStatus={entry.subStatus} />
+                ) : null}
                 <time className="tabular-nums">
                   更新于 {formatDate(entry.updatedAt)}
                 </time>
@@ -138,6 +142,13 @@ export default function EntryDetailPage() {
               )}
             </div>
           </div>
+
+          {entry.subStatus === 'scheduled' && entry.appointmentDate ? (
+            <div className="mt-4 rounded-lg bg-accent-soft px-3 py-2 text-[13px]">
+              <span className="font-medium text-yellow-800">预约日期：</span>
+              <span className="text-ink">{entry.appointmentDate}</span>
+            </div>
+          ) : null}
 
           {entry.note ? (
             <div className="mt-4 rounded-lg bg-primary-faint px-3 py-2 text-[13px]">
